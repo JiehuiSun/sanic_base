@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from flask.views import MethodView
+from quart.views import MethodView
 
 
 class TestView(MethodView):
-    def get(self, key):
+    async def get(self, key):
         return "ok"

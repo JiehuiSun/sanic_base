@@ -3,8 +3,8 @@
 
 import os
 import importlib
-from flask import Flask
-from flask import Blueprint
+from quart import Quart
+from quart import Blueprint
 from werkzeug.routing import BaseConverter
 
 from main import configs
@@ -19,7 +19,7 @@ class RegexConverter(BaseConverter):
 
 
 def create_app():
-    app = Flask(APP_NAME)
+    app = Quart(APP_NAME)
     app.config.from_object(configs.Config)
     app.url_map.converters["re"] = RegexConverter
     config_blueprint(app)
@@ -63,3 +63,10 @@ def config_blueprint(app):
 
     app.register_blueprint(instance,
                            url_prefix=app.config.get("URL_PREFIX", default_url_prefix))
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    app.run()
