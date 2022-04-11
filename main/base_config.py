@@ -13,5 +13,6 @@ class BaseConfig(object):
     RESP_MODE = "json"
     MODULES = (
         "test",
+        "account",
     )
     MOTOR_URI = "mongodb://localhost:27017/mt_prod"

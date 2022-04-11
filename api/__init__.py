@@ -33,6 +33,15 @@ class Api(HTTPMethodView):
         """
         处理参数
         """
+        if self.request.method.lower() != 'get':
+            self.data = self.request.json
+        else:
+            # self.data = dict(self.request.args)
+            self.data = self.request.args
+
+        await self._ver_params()
+
+    async def _ver_params(self, *args, **kwargs):
         pass
 
     async def _dispatch(self, *args, **kwargs):
@@ -51,6 +60,21 @@ class Api(HTTPMethodView):
         调用试图之后处理(可以改为Sanic自带的生命周期中间件)
         """
         pass
+
+    def ret(self, errcode=0, errmsg=None, data=None):
+        """
+        业务返回
+        """
+        ret_dict = {
+            0: "OK"
+        }
+        if not errmsg and errcode:
+            errmsg = ret_dict.get(errcode)
+            if not errmsg:
+                raise BaseError()
+        return {"errCode": errcode,
+                "errMsg": errmsg or ret_dict[errcode],
+                "data": data}
 
 
 class BaseError(Exception):
