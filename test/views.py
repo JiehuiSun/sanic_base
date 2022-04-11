@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 
 
-from sanic.views import HTTPMethodView
-from sanic.response import text
+from api import Api
 
 
-class TestView(HTTPMethodView):
-    async def get(self, req, key):
-        return text("ok")
+class TestView(Api):
+    async def get(self):
+        """
+        详情
+        /api/test/test/1
+        """
+        return "get"
+
+    async def list(self):
+        """
+        列表
+        /api/test/test/1
+        """
+        return {"method": "list"}
