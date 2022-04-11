@@ -15,6 +15,6 @@ class TestView(Api):
     async def list(self):
         """
         列表
-        /api/test/test/1
+        /api/test/test
         """
         return {"method": "list"}
