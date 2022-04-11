@@ -5,16 +5,20 @@ import os
 import importlib
 from sanic import Sanic
 from sanic import Blueprint
+from sanic_motor import BaseModel
 
 from main import configs
 
+
+# 可维护至系统环境变量
 APP_NAME = "dlwn"
 
 
 def create_app():
-    app = Sanic(APP_NAME)
+    app = Sanic.get_app(APP_NAME, force_create=True)
     app.config.update_config(configs.BaseConfig)
     app.config.update_config(configs.Config)
+    config_motor(app)
     config_blueprint(app)
 
     return app
@@ -52,6 +56,11 @@ def config_blueprint(app):
                            methods=methods)
 
     app.blueprint(instance)
+
+
+def config_motor(app):
+    BaseModel.init_app(app)
+    app.ctx.BaseModel = BaseModel
 
 
 app = create_app()

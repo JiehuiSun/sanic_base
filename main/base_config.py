@@ -14,3 +14,4 @@ class BaseConfig(object):
     MODULES = (
         "test",
     )
+    MOTOR_URI = "mongodb://localhost:27017/mt_prod"
