@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from quart.views import MethodView
+from sanic.views import HTTPMethodView
+from sanic.response import text
 
 
-class TestView(MethodView):
-    async def get(self, key):
-        return "ok"
+class TestView(HTTPMethodView):
+    async def get(self, req, key):
+        return text("ok")

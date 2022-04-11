@@ -3,35 +3,31 @@
 
 import os
 import importlib
-from quart import Quart
-from quart import Blueprint
-from werkzeug.routing import BaseConverter
+from sanic import Sanic
+from sanic import Blueprint
 
 from main import configs
 
 APP_NAME = "dlwn"
 
 
-class RegexConverter(BaseConverter):
-    def __init__(self, url_map, *args):
-        super(RegexConverter, self).__init__(url_map)
-        self.regex = args[0]
-
-
 def create_app():
-    app = Quart(APP_NAME)
-    app.config.from_object(configs.Config)
-    app.url_map.converters["re"] = RegexConverter
+    app = Sanic(APP_NAME)
+    app.config.update_config(configs.BaseConfig)
+    app.config.update_config(configs.Config)
     config_blueprint(app)
 
     return app
 
 
 def config_blueprint(app):
+    if app.config.get("RESP_MODE", "json") == "json":
+        default_url_prefix = "/api"
+    else:
+        default_url_prefix = ""
+
     instance = Blueprint(app.name,
-                         __name__,
-                         template_folder=app.config.get("TEMPLATE_DIR", "web"),
-                         static_folder=app.config.get("STATIC_DIR", "static"))
+                         url_prefix=app.config.get("URL_PREFIX", default_url_prefix))
 
     routing_dict = dict()
 
@@ -48,21 +44,14 @@ def config_blueprint(app):
         MODEL_NAME = getattr(app_router, "MODEL_NAME", module)
 
         for k, v in model_routing_dict.items():
-            routing_dict["/{0}{1}".format(MODEL_NAME, k)] = v
+            routing_dict["/{0}/{1}/".format(MODEL_NAME, k.strip("/"))] = v
 
     methods = ["GET", "POST", "PUT", "DELETE"]
     for path, view in routing_dict.items():
-        instance.add_url_rule("{0}<re('.*'):key>".format(path),
-                              view_func=view.as_view(path),
-                              methods=methods)
+        instance.add_route(view.as_view(), "{0}<key:.*>".format(path),
+                           methods=methods)
 
-    if app.config.get("RESP_MODE", "json") == "json":
-        default_url_prefix = "/api"
-    else:
-        default_url_prefix = ""
-
-    app.register_blueprint(instance,
-                           url_prefix=app.config.get("URL_PREFIX", default_url_prefix))
+    app.blueprint(instance)
 
 
 app = create_app()
