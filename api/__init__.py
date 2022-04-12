@@ -82,9 +82,18 @@ class VerParams:
             return "Params Error: {0}".format(errmsg)
         return True
 
-    def _valid_str(self, i, key_name=None):
+    def _valid_str(self, i, key_name=None, lenth=None):
         if isinstance(i, str):
-            return True, 'OK'
+            if not lenth:
+                return True, 'OK'
+            else:
+                try:
+                    lenth = int(lenth)
+                except ValueError:
+                    raise errors.InvalidArgsError("参数定义错误")
+                if len(i) <= lenth:
+                    return True, 'OK'
+
         return False, key_name
 
     def _valid_required(self, i, key_name=None):

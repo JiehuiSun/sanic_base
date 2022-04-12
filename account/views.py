@@ -31,7 +31,7 @@ class UserView(Api):
 
     async def post(self):
         self.params_dict = {
-            "openID": "required str",
+            "openID": "required str|43",
             "loginType": "optional str",
             "sdkType": "optional str",
             "phone": "optional str",
