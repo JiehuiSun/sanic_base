@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+import time
 import uuid
 
 from pymongo.read_concern import ReadConcern
@@ -68,3 +69,24 @@ async def update_user(projects=None, **kwargs):
         kwargs, projects
     )
     return user
+
+
+async def get_user_from_openid(openid, **kwargs):
+    """
+    根据openid获取用户
+
+    kwargs传sdkType等来源区分
+    """
+    kwargs["openID"] = openid
+    read_concern = ReadConcern(level='majority')
+    user = await User.with_options(
+        read_concern=read_concern,
+        read_preference=ReadPreference.PRIMARY
+    ).find_one(kwargs)
+    return user
+
+
+def gen_token(openid, **kwargs):
+    """生成Token"""
+    sign_str = openid + str(time.time())
+    return str(uuid.uuid3(uuid.NAMESPACE_OID, sign_str))
