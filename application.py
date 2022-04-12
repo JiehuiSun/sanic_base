@@ -67,4 +67,7 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(dev=True, debug=True)
+    if app.config.get("ENV") == "production":
+        app.run()
+    else:
+        app.run(dev=True, debug=True)

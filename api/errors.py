@@ -13,7 +13,7 @@
 
 class BaseError(Exception):
     errno = 10000
-    errmsg = '程序员跑路了'
+    errmsg = '系统异常'
 
     def __init__(self, errmsg=None):
         if errmsg:
@@ -39,7 +39,7 @@ class EnumError(BaseError):
 API_ERROR = {
     0: "OK",
     10101: "服务其他异常",
-    10201: "Token无效",
+    10201: "登录异常",
 
     20001: "用户不存在",
 
