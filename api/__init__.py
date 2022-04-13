@@ -58,6 +58,11 @@ class VerParams:
     参数校验
     """
     def _ver_params(self, params_dict, data):
+        if not params_dict:
+            return True
+        elif not data:
+            return "Request Body is NULL, Content Type is json?"
+
         data_keys = set(data.keys())
         max_keys = set(params_dict.keys())
         min_keys = set()
