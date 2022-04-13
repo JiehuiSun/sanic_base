@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-import pytz
 import datetime
+
+import pytz
 
 from api import Api, errors
 from utils import dt2str, dt2utc
