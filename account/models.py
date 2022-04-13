@@ -2,9 +2,8 @@
 
 
 from enum import Enum
-from sanic import Sanic
 
-app = Sanic.get_app("dlwn")
+from main.app import app
 
 
 class UserStatus(Enum):
