@@ -1,3 +1,13 @@
-Sanic==22.3.0
+aiofiles==0.8.0
+httptools==0.4.0
+motor==2.5.1
+multidict==6.0.2
+PyJWT==2.3.0
 pymongo==3.12.3
+pytz==2022.1
+sanic==22.3.0
 sanic-motor==0.6.0
+sanic-routing==22.3.0
+ujson==5.2.0
+uvloop==0.16.0
+websockets==10.2
