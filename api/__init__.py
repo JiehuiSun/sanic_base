@@ -5,6 +5,7 @@ import datetime
 import types
 from functools import wraps
 
+import jwt
 from sanic.request import Request
 from sanic.response import json, text
 from sanic.views import HTTPMethodView
@@ -12,14 +13,42 @@ from sanic.views import HTTPMethodView
 from . import errors
 
 
+def check_token(request: Request):
+    """
+    检测Token
+    如果不是用JWT重写此函数
+    """
+    if not request.token:
+        return False
+
+    try:
+        jwt.decode(
+            request.token,
+            request.app.config["SECRET_KEY"],
+            algorithms=["HS256"]
+        )
+    except jwt.exceptions.InvalidTokenError:
+        return False
+    except jwt.exceptions.ExpiredSignatureError:
+        raise False
+    except KeyError:
+        raise errors.BaseError("System Error.")
+    else:
+        return True
+
+
 def authorized():
     """认证"""
     def decorator(f):
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
-            # TODO 权限/认证
-            response = await f(request, *args, **kwargs)
-            return response
+            is_authenticated = check_token(request)
+
+            if is_authenticated:
+                response = await f(request, *args, **kwargs)
+                return response
+            else:
+                return json(Api().error(10201), 401)
         return decorated_function
     return decorator
 

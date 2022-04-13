@@ -71,6 +71,8 @@ class UserView(Api):
 
 class LoginView(UserView):
     """登录/注册"""
+    decorators = []
+
     async def post(self):
         self.params_dict = {
             "openID": "required str|43",
@@ -80,14 +82,11 @@ class LoginView(UserView):
         }
         await self.ver_params()
 
-        openid = self.data["openID"]
-        user = await get_user_from_openid(openid)
+        user = await get_user_from_openid(self.data["openID"])
         if user is not None:
-            openid = user["openID"]
+            uid = user["_id"]
         else:
-            await create_user(**self.data)
-            openid = self.data["openID"]
+            uid = await create_user(**self.data)
 
-        token = gen_token(openid)
-        # TODO 缓存
+        token = gen_token(self.request.app, uid)
         return self.ret({"token": token})

@@ -4,9 +4,11 @@
 import time
 import uuid
 
+import jwt
 from pymongo.read_concern import ReadConcern
 from pymongo.read_preferences import ReadPreference
 from pymongo.write_concern import WriteConcern
+from sanic import Sanic
 
 from utils import gen_random, utc_now
 
@@ -51,7 +53,7 @@ async def list_user(projects: dict = None, **kwargs) -> dict:
     return ret
 
 
-async def create_user(**kwargs) -> None:
+async def create_user(**kwargs) -> str:
     """创建用户"""
     # TODO 直接uuid也可以, 如需分类需确定sdkType值
     kwargs["_id"] = "%s%s-%s" % (kwargs.get("sdkType", "10"),
@@ -64,10 +66,11 @@ async def create_user(**kwargs) -> None:
     kwargs["active"] = True
     kwargs["status"] = "zc"
     write_concern = WriteConcern(w='majority', wtimeout=6000, j=True)
-    await User.with_options(
+    iuser = await User.with_options(
         write_concern=write_concern
     ).insert_one(kwargs)
-    return
+
+    return iuser.inserted_id
 
 
 async def update_user(projects=None, **kwargs):
@@ -89,7 +92,13 @@ async def get_user_from_openid(openid: str, **kwargs) -> dict:
     return user
 
 
-def gen_token(openid: str, **kwargs) -> str:
+def gen_token(app: Sanic, uid: str, **kwargs) -> str:
     """生成Token"""
-    sign_str = openid + str(time.time())
-    return str(uuid.uuid3(uuid.NAMESPACE_OID, sign_str))
+    tsp = time.time()
+    sign_str = uid + "-" + str(tsp)
+    payload = {
+        "sgin": sign_str,
+        "exp": int(tsp) + kwargs.get("exp", 3600 * 24)
+    }
+    token = jwt.encode(payload, app.config["SECRET_KEY"])
+    return token
