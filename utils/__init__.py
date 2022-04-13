@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+import pytz
 import random
 import datetime
+
+
+TZ_UTC = pytz.timezone("UTC")
+TZ_LOCAL = pytz.timezone("Asia/Shanghai")
 
 
 def gen_random(lenth: int = 4) -> str:
@@ -13,8 +18,12 @@ def gen_random(lenth: int = 4) -> str:
 
 
 def utc_now():
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.utcnow()
 
 
 def dt2str(dt: datetime.datetime, str_format: str = "%Y-%m-%d %H:%M:%S"):
     return dt.strftime(str_format)
+
+
+def dt2utc(dt: datetime.datetime):
+    return dt.replace(tzinfo=TZ_UTC).astimezone(tz=TZ_LOCAL)

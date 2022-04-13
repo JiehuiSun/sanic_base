@@ -28,10 +28,10 @@ async def get_user(user_id: str) -> dict:
 
 async def list_user(projects: dict = None, **kwargs) -> dict:
     """
-    Params: projects User Res Field
-    Params: kwargs User Fielter Field
+    :params projects: User Res Field
+    :params kwargs: User Fielter Field
 
-    Reture: dict
+    :Reture: dict
     """
     page = int(kwargs.pop("pageNo", 1))
     limit = int(kwargs.pop("pageSize", 100))
@@ -48,7 +48,7 @@ async def list_user(projects: dict = None, **kwargs) -> dict:
         "pageNo": page,
         "pageSize": limit,
         "totalPage": count,
-        "data": user.objects
+        "dataList": user.objects
     }
     return ret
 

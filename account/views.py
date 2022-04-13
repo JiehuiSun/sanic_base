@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
+import pytz
 import datetime
 
 from api import Api, errors
-from utils import dt2str
+from utils import dt2str, dt2utc
 
 from .models import UserStatus
 from .services import (create_user, gen_token, get_user, get_user_from_openid,
@@ -27,10 +28,10 @@ class UserView(Api):
         await self.ver_params()
         data = await list_user(**self.data)
 
-        for i in data["data"]:
+        for i in data["dataList"]:
             await self.handle_user_info(i)
 
-        return data
+        return self.ret(data)
 
     async def post(self):
         self.params_dict = {
@@ -56,7 +57,7 @@ class UserView(Api):
         """处理用户信息"""
         for k, v in user_dict.items():
             if isinstance(v, datetime.datetime):
-                v = dt2str(v.astimezone())
+                v = dt2str(dt2utc(v))
             elif k == "status":
                 status = getattr(UserStatus, v, None)
                 if not status:
