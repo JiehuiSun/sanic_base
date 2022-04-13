@@ -4,15 +4,18 @@
 import time
 import uuid
 
+import jwt
 from pymongo.read_concern import ReadConcern
-from pymongo.write_concern import WriteConcern
 from pymongo.read_preferences import ReadPreference
+from pymongo.write_concern import WriteConcern
+from sanic import Sanic
 
-from .models import User
 from utils import gen_random, utc_now
 
+from .models import User
 
-async def get_user(user_id):
+
+async def get_user(user_id: str) -> dict:
     read_concern = ReadConcern(level='majority')
     user = await User.with_options(
         read_concern=read_concern,
@@ -23,7 +26,13 @@ async def get_user(user_id):
     return user
 
 
-async def list_user(projects=None, **kwargs):
+async def list_user(projects: dict = None, **kwargs) -> dict:
+    """
+    :params projects: User Res Field
+    :params kwargs: User Fielter Field
+
+    :Reture: dict
+    """
     page = int(kwargs.pop("pageNo", 1))
     limit = int(kwargs.pop("pageSize", 100))
     count = await User.count_documents(kwargs)
@@ -39,14 +48,17 @@ async def list_user(projects=None, **kwargs):
         "pageNo": page,
         "pageSize": limit,
         "totalPage": count,
-        "data": user.objects
+        "dataList": user.objects
     }
     return ret
 
 
-async def create_user(**kwargs):
+async def create_user(**kwargs) -> str:
+    """创建用户"""
     # TODO 直接uuid也可以, 如需分类需确定sdkType值
-    kwargs["_id"] = "%s%s-%s" % (kwargs.get("sdkType", "10"), gen_random(), uuid.uuid4())
+    kwargs["_id"] = "%s%s-%s" % (kwargs.get("sdkType", "10"),
+                                 gen_random(),
+                                 uuid.uuid4())
     now = utc_now()
     kwargs["tInsert"] = now
     kwargs["tUpdate"] = now
@@ -54,24 +66,18 @@ async def create_user(**kwargs):
     kwargs["active"] = True
     kwargs["status"] = "zc"
     write_concern = WriteConcern(w='majority', wtimeout=6000, j=True)
-    await User.with_options(
+    iuser = await User.with_options(
         write_concern=write_concern
     ).insert_one(kwargs)
-    return
+
+    return iuser.inserted_id
 
 
 async def update_user(projects=None, **kwargs):
-    read_concern = ReadConcern(level='majority')
-    user = await User.with_options(
-        read_concern=read_concern,
-        read_preference=ReadPreference.PRIMARY
-    ).find(
-        kwargs, projects
-    )
-    return user
+    pass
 
 
-async def get_user_from_openid(openid, **kwargs):
+async def get_user_from_openid(openid: str, **kwargs) -> dict:
     """
     根据openid获取用户
 
@@ -86,7 +92,13 @@ async def get_user_from_openid(openid, **kwargs):
     return user
 
 
-def gen_token(openid, **kwargs):
+def gen_token(app: Sanic, uid: str, **kwargs) -> str:
     """生成Token"""
-    sign_str = openid + str(time.time())
-    return str(uuid.uuid3(uuid.NAMESPACE_OID, sign_str))
+    tsp = time.time()
+    sign_str = uid + "-" + str(tsp)
+    payload = {
+        "sgin": sign_str,
+        "exp": int(tsp) + kwargs.get("exp", 3600 * 24)
+    }
+    token = jwt.encode(payload, app.config["SECRET_KEY"])
+    return token

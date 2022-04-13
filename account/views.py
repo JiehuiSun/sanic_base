@@ -3,14 +3,14 @@
 
 import datetime
 
+import pytz
+
 from api import Api, errors
-from .services import (list_user,
-                       get_user,
-                       create_user,
-                       get_user_from_openid,
-                       gen_token)
+from utils import dt2str, dt2utc
+
 from .models import UserStatus
-from utils import dt2str
+from .services import (create_user, gen_token, get_user, get_user_from_openid,
+                       list_user)
 
 
 class UserView(Api):
@@ -29,10 +29,10 @@ class UserView(Api):
         await self.ver_params()
         data = await list_user(**self.data)
 
-        for i in data["data"]:
+        for i in data["dataList"]:
             await self.handle_user_info(i)
 
-        return data
+        return self.ret(data)
 
     async def post(self):
         self.params_dict = {
@@ -58,7 +58,7 @@ class UserView(Api):
         """处理用户信息"""
         for k, v in user_dict.items():
             if isinstance(v, datetime.datetime):
-                v = dt2str(v.astimezone())
+                v = dt2str(dt2utc(v))
             elif k == "status":
                 status = getattr(UserStatus, v, None)
                 if not status:
@@ -73,6 +73,8 @@ class UserView(Api):
 
 class LoginView(UserView):
     """登录/注册"""
+    decorators = []
+
     async def post(self):
         self.params_dict = {
             "openID": "required str|43",
@@ -82,14 +84,11 @@ class LoginView(UserView):
         }
         await self.ver_params()
 
-        openid = self.data["openID"]
-        user = await get_user_from_openid(openid)
+        user = await get_user_from_openid(self.data["openID"])
         if user is not None:
-            openid = user["openID"]
+            uid = user["_id"]
         else:
-            await create_user(**self.data)
-            openid = self.data["openID"]
+            uid = await create_user(**self.data)
 
-        token = gen_token(openid)
-        # TODO 缓存
+        token = gen_token(self.request.app, uid)
         return self.ret({"token": token})
