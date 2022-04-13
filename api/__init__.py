@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
-import types
 import datetime
+import types
 from functools import wraps
 
+from sanic.request import Request
+from sanic.response import json, text
 from sanic.views import HTTPMethodView
-from sanic.response import text, json
 
 from . import errors
 
 
 def authorized():
+    """认证"""
     def decorator(f):
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
@@ -49,7 +51,8 @@ class VerParams:
             errmsg_keys_not_match += ', '.join([str(k) for k in overflow_keys])
         if lack_keys:
             flag_keys_not_match = True
-            errmsg_keys_not_match += 'Missing {len(lack_keys)} Required Positional Params: '
+            errmsg_keys_not_match += 'Missing {} Required Positional Params: '\
+                .format(len(lack_keys))
             errmsg_keys_not_match += ', '.join([str(k) for k in lack_keys])
         if flag_keys_not_match:
             return errmsg_keys_not_match
@@ -67,8 +70,10 @@ class VerParams:
                 check_method_list = check_method.split(' ')
                 for item_method in check_method_list:
                     if "|" in item_method:
-                        item_method, params_format = item_method.split("|")
-                        flag, msg = getattr(self, '_valid_'+item_method)(v, k, params_format)
+                        item_method, tag = item_method.split("|")
+                        flag, msg = getattr(self, '_valid_'+item_method)(v,
+                                                                         k,
+                                                                         tag)
                     else:
                         flag, msg = getattr(self, '_valid_'+item_method)(v, k)
                     if not flag:
@@ -153,7 +158,11 @@ class Api(HTTPMethodView, VerParams):
     decorators = [authorized()]
 
     def __init__(self, *args, **kwargs):
-        self.params_dict = {}
+        self.params_dict: dict = {}
+        self.request: Request = None
+        self.key: str = None
+        self.data: dict = None
+        self.call_method: str = None
 
     async def dispatch_request(self, *args, **kwargs):
         self.request = args[0]
@@ -211,7 +220,7 @@ class Api(HTTPMethodView, VerParams):
         """
         pass
 
-    def ret(self, data=None):
+    def ret(self, data: dict = None) -> dict:
         """业务正常返回"""
         return {
             "errCode": 0,
@@ -219,7 +228,7 @@ class Api(HTTPMethodView, VerParams):
             "data": data
         }
 
-    def error(self, errcode, errmsg=None):
+    def error(self, errcode: int, errmsg: str = None) -> dict:
         """业务错误"""
         if not errmsg and errcode:
             errmsg = errors.API_ERROR.get(errcode)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import importlib
-from sanic import Sanic
-from sanic import Blueprint
+import os
+
+from sanic import Blueprint, Sanic
 from sanic_motor import BaseModel
 
 from main import configs
@@ -20,18 +20,21 @@ def create_app():
     app.config.update_config(configs.Config)
     config_motor(app)
     config_blueprint(app)
+    # config_jinja(app)
 
     return app
 
 
-def config_blueprint(app):
+def config_blueprint(app: Sanic):
     if app.config.get("RESP_MODE", "json") == "json":
         default_url_prefix = "/api"
     else:
         default_url_prefix = ""
 
+    if not (url_prefix := app.config.get("URL_PREFIX")):
+        url_prefix = default_url_prefix
     instance = Blueprint(app.name,
-                         url_prefix=app.config.get("URL_PREFIX", default_url_prefix))
+                         url_prefix=url_prefix)
 
     routing_dict = dict()
 
@@ -58,7 +61,7 @@ def config_blueprint(app):
     app.blueprint(instance)
 
 
-def config_motor(app):
+def config_motor(app: Sanic):
     BaseModel.init_app(app)
     app.ctx.BaseModel = BaseModel
 

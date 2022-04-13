@@ -4,13 +4,11 @@
 import datetime
 
 from api import Api, errors
-from .services import (list_user,
-                       get_user,
-                       create_user,
-                       get_user_from_openid,
-                       gen_token)
-from .models import UserStatus
 from utils import dt2str
+
+from .models import UserStatus
+from .services import (create_user, gen_token, get_user, get_user_from_openid,
+                       list_user)
 
 
 class UserView(Api):

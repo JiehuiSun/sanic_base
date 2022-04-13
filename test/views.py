@@ -8,7 +8,6 @@ from api import Api
 from .models import GiftPool
 
 
-
 class TestView(Api):
     async def get(self):
         """
